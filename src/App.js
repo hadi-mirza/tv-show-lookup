@@ -1,6 +1,7 @@
 import "./App.css";
 import axios from "axios";
 import React from "react";
+import { Link } from "react-router-dom";
 
 const API_ENDPOINT = "http://api.tvmaze.com/search/shows?q=";
 
@@ -26,12 +27,10 @@ function App() {
           isLoading: false,
           isError: true,
         };
-      case "REMOVE_ITEM":
+      case "FAVORITE_ITEM":
         return {
           ...state,
-          data: state.data.filter(
-            (show) => action.payload.show.id !== show.show.id
-          ),
+          favorites: [...state.favorites, action.payload],
         };
       default:
         throw new Error();
@@ -45,6 +44,7 @@ function App() {
     data: [],
     isLoading: false,
     isError: false,
+    favorites: [],
   });
 
   const handleFetchShows = React.useCallback(async () => {
@@ -76,43 +76,45 @@ function App() {
     event.preventDefault();
   };
 
-  const handleRemoveItem = React.useCallback((item) => {
+  const handleFavoriteItem = React.useCallback((item) => {
     dispatchShows({
-      type: "REMOVE_ITEM",
+      type: "FAVORITE_ITEM",
       payload: item,
     });
-    console.log(item);
   });
 
   return (
     <div>
       <h1>TV Show lookup</h1>
+      <Link to={"/favorites"} state={{ favorites: { shows } }}>
+        Favorites
+      </Link>
       <Search handleSearchTerm={handleSearchTerm} handleSearch={handleSearch} />
       {shows.isError && <p>Something went wrong...</p>}
       {shows.isLoading ? (
         <p>Loading...</p>
       ) : (
-        <List list={shows.data} onRemoveItem={handleRemoveItem} />
+        <List list={shows.data} onFavoriteItem={handleFavoriteItem} />
       )}
       {!searchTerm && <p>Enter a TV show</p>}
     </div>
   );
 }
 
-const List = ({ list, onRemoveItem }) => (
+const List = ({ list, onFavoriteItem }) => (
   <ul>
     {list.map((item) => (
-      <Item key={item.show.id} item={item} onRemoveItem={onRemoveItem} />
+      <Item key={item.show.id} item={item} onFavoriteItem={onFavoriteItem} />
     ))}
   </ul>
 );
 
-const Item = ({ item, onRemoveItem }) => (
+const Item = ({ item, onFavoriteItem }) => (
   <li>
     <a href={item.show.url}>{item.show.name}</a>
     <span>
-      <button type="button" onClick={() => onRemoveItem(item)}>
-        Remove
+      <button type="button" onClick={() => onFavoriteItem(item)}>
+        Add to Favorites
       </button>
     </span>
   </li>
