@@ -26,6 +26,13 @@ function App() {
           isLoading: false,
           isError: true,
         };
+      case "REMOVE_ITEM":
+        return {
+          ...state,
+          data: state.data.filter(
+            (show) => action.payload.show.id !== show.show.id
+          ),
+        };
       default:
         throw new Error();
     }
@@ -69,27 +76,45 @@ function App() {
     event.preventDefault();
   };
 
+  const handleRemoveItem = React.useCallback((item) => {
+    dispatchShows({
+      type: "REMOVE_ITEM",
+      payload: item,
+    });
+    console.log(item);
+  });
+
   return (
     <div>
       <h1>TV Show lookup</h1>
       <Search handleSearchTerm={handleSearchTerm} handleSearch={handleSearch} />
       {shows.isError && <p>Something went wrong...</p>}
-      {shows.isLoading ? <p>Loading...</p> : <List list={shows.data} />}
+      {shows.isLoading ? (
+        <p>Loading...</p>
+      ) : (
+        <List list={shows.data} onRemoveItem={handleRemoveItem} />
+      )}
+      {!searchTerm && <p>Enter a TV show</p>}
     </div>
   );
 }
 
-const List = ({ list }) => (
+const List = ({ list, onRemoveItem }) => (
   <ul>
     {list.map((item) => (
-      <Item key={item.show.id} item={item} />
+      <Item key={item.show.id} item={item} onRemoveItem={onRemoveItem} />
     ))}
   </ul>
 );
 
-const Item = ({ item }) => (
+const Item = ({ item, onRemoveItem }) => (
   <li>
     <a href={item.show.url}>{item.show.name}</a>
+    <span>
+      <button type="button" onClick={() => onRemoveItem(item)}>
+        Remove
+      </button>
+    </span>
   </li>
 );
 
